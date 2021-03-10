@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Раскрытие скобок</title>
+		<script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+		<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+
+		<!-- Не используйте это в production -->
+		<script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+		<script src="https://unpkg.com/prop-types@15.6/prop-types.js"></script>
+
+		<style>
+			.head-wrapper {
+
+			}
+
+			.head {
+				text-align: center;
+				font-size: 20px;
+			}
+
+			.operation {
+				border: 3px solid #1874FF;
+				margin: 5px;
+				padding: 3px;
+				cursor: pointer;
+			}
+
+			.operation.active {
+				background-color: #FFBC41;
+				border: 3px solid #FF6E64;
+			}
+
+			.number input {
+				width: 42px;
+				height: 50px;
+				text-align: center;
+				font-size: 30px;
+			}
+
+			.numbers {
+				margin: 0 0 10px 0;
+			}
+
+			.numbers div, .on-line-symbol {
+				width: 50px;
+				height: 50px;
+				display: inline-block;
+				text-align: center;
+				font-size: 30px;
+				line-height: 50px;
+			}
+
+			.numbers div.symbol{
+				width: 25px;
+			}
+
+			.square {
+				width: 48px;
+				height: 48px;
+				border: 1px solid #2933A0;
+			}
+
+			.empty {
+				width: 50px;
+				height: 50px;
+			}
+
+			.space25 {
+				width: 25px;
+				height: 50px;			
+			}
+
+			.space50 {
+				width: 50px;
+				height: 50px;			
+			}
+
+			.space100 {
+				width: 100px;
+				height: 50px;			
+			}
+
+			.space150 {
+				width: 150px;
+				height: 50px;			
+			}
+
+			.space250 {
+				width: 250px;
+				height: 50px;			
+			}
+
+			.space275 {
+				width: 275px;
+				height: 50px;			
+			}
+
+			.space300 {
+				width: 300px;
+				height: 50px;			
+			}
+
+			.space350 {
+				width: 350px;
+				height: 50px;			
+			}
+
+			.empty, .space25, .space50, .space100, .space150 {
+				background-color: rgba(0, 102, 255, 0.0);
+			}
+
+			.square.plus {
+				background-color: #00ff00;
+			}
+
+			.square.minus {
+				background-color: #ff0000;
+			}
+
+			.column, .space25, .space50, .space100, .space150, .head {
+				display: inline-block;
+			}
+
+			#columns-plus {
+				position: relative;
+				top: 4px;
+			}
+			#columns-minus .column {
+				vertical-align: top;
+			}
+
+			body {
+				background: rgba(0, 102, 255, 0.38);
+				font-family: sans-serif;
+				width: 1300px;
+			}
+
+			.line {
+				width: 100%;
+				height: 3px;
+				background-color: #222222;
+			}
+
+			.line-wrapper {
+				position: relative;
+			}
+
+			.on-line {
+				width: 100%;
+				height: 50px;
+				position: absolute;
+				top: -25px;
+			}
+
+			.on-line-symbol {
+				background-color: #9EC4FF;
+			}
+			.on-line-symbol.to-hide {
+				opacity: 0.0;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="text/babel">
+const Head = (props) => {
+	const operations = {
+		"op0": '',
+		"op1": 'внесение знака под скобки',
+		"op2": 'внесение числа под скобки',
+		"op3": 'раскрытие скобок',
+	}
+
+	return(
+		<div className="head-wrapper">
+
+			<div className="head space300">пример</div>
+			<div className="head space300">
+				{Object.keys(operations).map(function(op, index) {
+					if(op !== "op0"){
+					  return(
+					  	<div
+					  		className={op===props.operation ? "operation active" : "operation"}
+					  		id={op}
+					  		key={op}
+					  		onClick={props.onClick}>
+					  			{operations[op]}
+					  	</div>
+					  )
+					}else {
+						return(null)
+					}
+				})}
+			</div>
+		</div>
+	)
+}
+
+class Numbers extends React.Component {
+	onInputChangeHandler = this.props.onChange
+	changeSign = (mult, s1, s2) => {
+		if (mult < 0){
+			s1 = -s1
+			s2 = -s2
+		}
+		return(
+			<React.Fragment>
+				<div className="number">{s1}</div>
+				<div className="symbol">+</div>
+				<div className="number">{s2}</div>
+			</React.Fragment>
+		)
+	}
+	numberToBreakets = (mult, s1, s2) => {
+		if( mult < 0 ) {
+			return(
+				<React.Fragment>
+					<div className="symbol">-</div>
+					<div className="symbol">(</div>
+					<div className="number">{-mult}</div>
+					<div className="symbol">&middot;</div>
+					<div className="number">{s1}</div>
+					<div className="symbol">+</div>
+					<div className="number">{-mult}</div>
+					<div className="symbol">&middot;</div>
+					<div className="number">{s2}</div>
+					<div className="symbol">)</div>
+				</React.Fragment>
+			)
+		} else {
+			return(
+				<React.Fragment>
+					<div className="number">{mult}</div>
+					<div className="symbol">&middot;</div>
+					<div className="number">{s1}</div>
+					<div className="symbol">+</div>
+					<div className="number">{mult}</div>
+					<div className="symbol">&middot;</div>
+					<div className="number">{s2}</div>
+				</React.Fragment>
+			)
+		}
+	}
+	render(){
+		const { mult, s1, s2, operation } = this.props
+		const showOperation = (operation) => {
+			if(operation === 'op1'){
+			return(
+				<React.Fragment>
+					<div className="symbol">=</div>
+					<div className="number">{Math.abs(mult)}</div>
+					<div className="symbol">&middot;</div>
+					<div className="symbol">(</div>
+					{this.changeSign(mult,s1,s2)}
+					<div className="symbol">)</div>
+				</React.Fragment>
+				)
+			}
+			if(operation === 'op2'){
+			return(
+				<React.Fragment>
+					<div className="symbol">=</div>
+					{this.numberToBreakets(mult, s1, s2)}
+				</React.Fragment>
+				)
+			}
+			if(operation === 'op3'){
+			return(
+				<React.Fragment>
+					<div className="symbol">=</div>
+					<div className="number">{Math.abs(mult)}</div>
+					<div className="symbol">&middot;</div>
+					<div className="number">{mult < 0 ? -s1: s1}</div>
+					<div className="symbol">+</div>
+					<div className="number">{Math.abs(mult)}</div>
+					<div className="symbol">&middot;</div>
+					<div className="number">{mult < 0 ? -s2: s2}</div>
+				</React.Fragment>
+				)
+			}
+		}
+
+		return(
+			<div className="numbers">
+				<div className="number">
+					<input type="text" value={mult} onChange={this.onInputChangeHandler} id="mult"/>
+				</div>
+				{/* Символ умножения можно указать по-разному:
+					·
+					&#xB7; это от U+00B7
+					&middot;
+				*/}
+				<div className="symbol">&middot;</div>
+				<div className="symbol">(</div>
+				<div className="number">
+					<input type="text" value={s1} onChange={this.onInputChangeHandler} id="s1"/>
+				</div>
+				<div className="symbol">+</div>
+				<div className="number">
+					<input type="text" value={s2} onChange={this.onInputChangeHandler} id="s2"/>
+				</div>
+				<div className="symbol">)</div>
+				{showOperation(operation)}
+				
+				
+
+				
+
+
+			</div>
+		)
+	}
+}
+
+class Square extends React.Component {
+	render(){
+		const sign = this.props.sign
+		return(
+			<div className={"square " + sign}>
+			</div>
+		)
+	}
+}
+
+class Squares extends React.Component {
+	render() {
+		const number = this.props.number
+		const sign = this.props.sign
+		let column = []
+		for(let i=0; i<Math.abs(number); i++){
+			column.push(<Square key={i+1} sign={sign}/>);	
+		}
+		if (number === 0) { column = <Empty />}
+		return(
+			<div className="column">{column}</div>
+		)
+	}
+}
+
+class Columns extends React.Component {
+	addSpace = (className) => {
+
+		return(
+			<div className={className} key={++this.keyCounter}></div>
+		)
+	}
+
+	addSquares = (columnSign, number) => {
+		let sign = number >= 0 ? "plus" : "minus"
+		if (columnSign === sign) {
+			return(<Squares sign={sign} number={number} key={++this.keyCounter}/>)
+		} else {
+			return(<Squares sign={sign} number={0} key={++this.keyCounter}/>)
+		}
+	}
+
+	keyCounter = 0
+
+	render() {
+		this.keyCounter = 0
+		const { columnSign, mult, s1, s2, operation } = this.props
+
+		let columns = []
+		columns.push(this.addSpace('space100'))
+		columns.push(this.addSquares( columnSign, s1))
+		columns.push(this.addSpace('space25'))
+		columns.push(this.addSquares( columnSign, s2))
+
+	
+		if(operation === 'op1'){
+			columns.push(this.addSpace('space150'))
+			columns.push(this.addSquares( columnSign, mult<0 ? -s1 : s1))
+			columns.push(this.addSpace('space25'))
+			columns.push(this.addSquares( columnSign, mult<0 ? -s2 : s2))
+		}
+		if(operation === 'op2'){
+			columns.push(this.addSpace(mult<0 ? 'space100' : 'space50'))
+
+			let i = Math.abs(mult)
+			while (i > 0) {
+				columns.push(this.addSquares( columnSign, s1))
+				i--
+			}
+			columns.push(this.addSpace('space25'))
+			i = Math.abs(mult)
+			while (i > 0) {
+				columns.push(this.addSquares( columnSign, s2))
+				i--
+			}
+		}
+		if(operation === 'op3'){
+			columns.push(this.addSpace('space50'))
+
+			let i = Math.abs(mult)
+			while (i > 0) {
+				columns.push(this.addSquares( columnSign, mult<0 ? -s1 : s1))
+				i--
+			}
+			columns.push(this.addSpace('space25'))
+			i = Math.abs(mult)
+			while (i > 0) {
+				columns.push(this.addSquares( columnSign, mult<0 ? -s2 : s2))
+				i--
+			}
+		}
+
+		return(
+			<div className="columns" id={"columns-"+columnSign}>{columns}</div>
+		)
+	}
+}
+
+class App extends React.Component {
+	state = {'mult': 1, 's1': 2, 's2': -2, 'operation': "op0"}
+	onInputChangeHandler = (e) => {
+		console.log('e.target.value: ', e.target.value)
+		console.log('e.target.id: ', e.target.id)
+		this.setState({[e.target.id]: e.target.value})
+	}
+	onOperationClick = (e) => {
+		console.log('operation click id', e.currentTarget.id)
+		this.setState({'operation': e.currentTarget.id})
+	}
+	render() {
+		const { mult, s1, s2, operation } = this.state
+		return(
+			<React.Fragment>
+				<Head onClick={this.onOperationClick} operation={operation}/>
+				<Numbers onChange={this.onInputChangeHandler} mult={mult} s1={s1} s2={s2} operation={operation}/>
+				<Columns columnSign="plus" mult={mult} s1={s1} s2={s2} operation={operation}/>
+				<Line mult={this.state.mult} operation={operation}/>
+				<Columns columnSign="minus" mult={mult} s1={s1} s2={s2} operation={operation}/>
+			</React.Fragment>
+		)
+	}
+}
+const duplicate = (elem, times, k) => {
+	console.log('elem', elem)
+	console.log('elem.type', elem.type)
+	console.log('elem.props.className', elem.props.className)
+	console.log('elem.props.children', elem.props.children)
+	let collection =[]
+	for (let i=0; i < times; i++){
+		let myEl = React.createElement(elem.type,
+			{
+				className: elem.props.className,
+				key: ++k
+			},
+			elem.props.children
+		)
+		collection.push(myEl)
+	}
+	return collection
+}
+
+const Line = (props) => {
+	const mult = props.mult
+	const operation = props.operation
+	let k = 0
+
+	const showOperation = (operation) => {
+		if(operation === 'op1'){
+		return(
+			<React.Fragment>
+				<div className="on-line-symbol space25" key={++k}>=</div>
+				<div className="on-line-symbol" key={++k}>{Math.abs(mult)}</div>
+				<div className="on-line-symbol space25" key={++k}>&middot;</div>
+				<div className="on-line-symbol space25" key={++k}>(</div>
+				<div className="on-line-symbol to-hide" key={++k}>x</div>
+				<div className="on-line-symbol space25" key={++k}>+</div>
+				<div className="on-line-symbol to-hide" key={++k}>x</div>
+				<div className="on-line-symbol space25" key={++k}>)</div>
+			</React.Fragment>
+			)
+		}
+		if(operation === 'op2'){
+		return(
+			<React.Fragment>
+				<div className="on-line-symbol space25" key={++k}>=</div>
+				{numberToBreakets(mult)}
+			</React.Fragment>
+			)
+		}
+		if(operation === 'op3'){
+		return(
+			<React.Fragment>
+				<div className="on-line-symbol space25" key={++k}>=</div>
+				{together(mult)}
+			</React.Fragment>
+			)
+		}
+	}
+
+	const numberToBreakets = (mult) => {
+		if( mult < 0 ) {
+			return(
+				<React.Fragment>
+					<div className="on-line-symbol space25" key={++k}>-</div>
+					<div className="on-line-symbol space25" key={++k}>(</div>
+					{duplicate(<div className="on-line-symbol to-hide">x</div>, -mult, k)}
+					<div className="on-line-symbol space25" key={k=k+1-mult}>+</div>
+					{duplicate(<div className="on-line-symbol to-hide">x</div>, -mult, k)}
+					<div className="on-line-symbol space25" key={k=k+1-mult}>)</div>
+				</React.Fragment>
+			)
+		} else {
+			return(
+				<React.Fragment>
+					{duplicate(<div className="on-line-symbol to-hide">x</div>, mult, k)}
+					<div className="on-line-symbol space25" key={k=k+1+mult}>+</div>
+					{duplicate(<div className="on-line-symbol to-hide">x</div>, mult, k)}
+				</React.Fragment>
+			)
+		}
+	}
+
+	const together = (mult) => {
+		return(
+			<React.Fragment>
+				{duplicate(<div className="on-line-symbol to-hide">x</div>, Math.abs(mult), k)}
+				<div className="on-line-symbol space25" key={k=k+1-mult}>+</div>
+				{duplicate(<div className="on-line-symbol to-hide">x</div>, Math.abs(mult), k)}
+			</React.Fragment>
+		)
+	}
+	return(
+		<div className="line-wrapper">
+			<div className="line"></div>
+			<div className="on-line">
+				<div className="on-line-symbol" key={++k}>{mult}</div>
+				<div className="on-line-symbol space25" key={++k}>&middot;</div>
+				<div className="on-line-symbol space25" key={++k}>(</div>
+				<div className="on-line-symbol to-hide" key={++k}>x</div>
+				<div className="on-line-symbol space25" key={++k}>+</div>
+				<div className="on-line-symbol to-hide" key={++k}>x</div>
+				<div className="on-line-symbol space25" key={++k}>)</div>
+				{showOperation(operation)}
+			</div>
+		</div>
+	)
+}
+
+const Empty = () => {
+	return(
+		<div className="empty"></div>
+	)
+}
+
+ReactDOM.render(
+	<App />,
+	document.getElementById('root')
+);
+		</script>
+
+	</body>
+</html>
